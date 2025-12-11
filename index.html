@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Professional Invoice Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Inter", sans-serif;
+      }
+      @media print {
+        body {
+          background: white;
+          margin: 0;
+          padding: 0;
+        }
+        .no-print {
+          display: none !important;
+        }
+        #invoice {
+          box-shadow: none !important;
+          margin: 0;
+          width: 100%;
+        }
+        .page-break {
+          page-break-before: always;
+        }
+        .invoice-header {
+          display: table-header-group;
+        }
+        table {
+          break-inside: avoid;
+        }
+        tfoot {
+          display: table-footer-group;
+        }
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50 min-h-screen py-12">
+    <div class="max-w-4xl mx-auto px-4">
+      <!-- Control Panel (Hidden on Print) -->
+      <div class="no-print bg-white rounded-xl shadow-md p-8 mb-10">
+        <h1 class="text-3xl font-semibold text-gray-800 mb-8">
+          Professional Invoice Generator
+        </h1>
+
+        <div class="grid md:grid-cols-2 gap-8 mb-8">
+          <!-- Company Details -->
+          <div>
+            <h2 class="text-xl font-medium text-gray-700 mb-4">
+              Your Company Details
+            </h2>
+            <input
+              type="text"
+              id="companyName"
+              placeholder="Company Name"
+              class="block w-full mb-3 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 text-sm"
+            />
+            <textarea
+              id="companyAddress"
+              placeholder="Company Address"
+              rows="3"
+              class="block w-full mb-3 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 text-sm"
+            ></textarea>
+            <input
+              type="email"
+              id="companyEmail"
+              placeholder="Email"
+              class="block w-full mb-3 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 text-sm"
+            />
+            <input
+              type="tel"
+              id="companyPhone"
+              placeholder="Phone"
+              class="block w-full mb-3 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 text-sm"
+            />
+            <button
+              id="saveCompanyBtn"
+              class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition text-sm"
+            >
+              Save
+            </button>
+          </div>
+
+          <!-- Client Details -->
+          <div>
+            <h2 class="text-xl font-medium text-gray-700 mb-4">
+              Client Details
+            </h2>
+            <input
+              type="text"
+              id="clientName"
+              placeholder="Client Name"
+              class="block w-full mb-3 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 text-sm"
+            />
+            <textarea
+              id="clientAddress"
+              placeholder="Client Address"
+              rows="3"
+              class="block w-full mb-3 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 text-sm"
+            ></textarea>
+            <input
+              type="email"
+              id="clientEmail"
+              placeholder="Email"
+              class="block w-full mb-3 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 text-sm"
+            />
+            <input
+              type="tel"
+              id="clientPhone"
+              placeholder="Phone"
+              class="block w-full mb-3 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 text-sm"
+            />
+            <button
+              id="saveClientBtn"
+              class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition text-sm"
+            >
+              Update Client
+            </button>
+          </div>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-8 mb-8">
+          <!-- Invoice Settings -->
+          <div>
+            <h2 class="text-xl font-medium text-gray-700 mb-4">
+              Invoice Settings
+            </h2>
+            <div class="flex items-center mb-3">
+              <input type="checkbox" id="hideInvoiceNo" class="mr-2" />
+              <label for="hideInvoiceNo" class="text-sm text-gray-600"
+                >Hide Invoice Number</label
+              >
+            </div>
+            <input
+              type="text"
+              id="invoiceNoInput"
+              placeholder="Invoice Number (e.g., INV-001)"
+              class="block w-full mb-3 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 text-sm"
+            />
+            <input
+              type="date"
+              id="invoiceDateInput"
+              class="block w-full mb-3 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2 text-sm"
+            />
+          </div>
+
+          <!-- Logo & CSV -->
+          <div>
+            <h2 class="text-xl font-medium text-gray-700 mb-4">Files</h2>
+            <label class="block text-sm font-medium text-gray-600 mb-2"
+              >Company Logo</label
+            >
+            <input
+              type="file"
+              id="logoInput"
+              accept="image/*"
+              class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-indigo-600 file:text-white mb-3"
+            />
+
+            <label class="block text-sm font-medium text-gray-600 mb-2"
+              >Products CSV</label
+            >
+            <input
+              type="file"
+              id="csvInput"
+              accept=".csv"
+              class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-indigo-600 file:text-white"
+            />
+          </div>
+        </div>
+
+        <!-- Add Product -->
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-end mb-6">
+          <div class="md:col-span-2">
+            <label class="block text-xs font-medium text-gray-600"
+              >Product</label
+            >
+            <select
+              id="productSelect"
+              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm p-2"
+            >
+              <option value="">Select product...</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600">Qty</label>
+            <input
+              type="number"
+              id="qty"
+              min="1"
+              value="1"
+              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm p-2"
+            />
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600"
+              >Price (LKR)</label
+            >
+            <input
+              type="number"
+              id="price"
+              step="0.01"
+              min="0"
+              placeholder="0.00"
+              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm p-2"
+            />
+          </div>
+          <div>
+            <button
+              id="addBtn"
+              class="w-full bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-700 transition text-sm"
+            >
+              Add
+            </button>
+          </div>
+        </div>
+
+        <!-- Buttons -->
+        <div class="flex justify-between">
+          <button
+            id="newInvoiceBtn"
+            class="bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition text-sm"
+          >
+            New Invoice
+          </button>
+          <button
+            id="generatePdfBtn"
+            class="bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition text-sm"
+          >
+            Generate PDF
+          </button>
+        </div>
+      </div>
+
+      <!-- Minimal Modern Invoice -->
+      <div id="invoice" class="bg-white shadow-lg rounded-xl overflow-hidden">
+        <div class="p-8 md:p-12">
+          <div class="flex justify-between items-start mb-12">
+            <div>
+              <img
+                id="invoiceLogo"
+                class="h-32 w-32"
+                src=""
+                alt="Logo"
+                style="display: none"
+              />
+              <h1 class="text-4xl font-light text-gray-800">Invoice</h1>
+            </div>
+            <div class="text-right">
+              <p id="invoiceNoDisplay" class="text-lg text-gray-600">
+                Invoice #<span id="invoiceNo"></span>
+              </p>
+              <p class="text-lg text-gray-600 mt-2">
+                Date: <span id="invoiceDate"></span>
+              </p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-12 mb-12">
+            <div>
+              <h2 class="font-medium text-gray-700 mb-3">From</h2>
+              <p id="fromName" class="font-semibold text-gray-800"></p>
+              <p id="fromAddress" class="text-gray-600 whitespace-pre-line"></p>
+              <p id="fromEmail" class="text-gray-600"></p>
+              <p id="fromPhone" class="text-gray-600"></p>
+            </div>
+            <div>
+              <h2 class="font-medium text-gray-700 mb-3">Bill To</h2>
+              <p id="clientNameDisplay" class="font-semibold text-gray-800"></p>
+              <p
+                id="clientAddressDisplay"
+                class="text-gray-600 whitespace-pre-line"
+              ></p>
+              <p id="clientEmailDisplay" class="text-gray-600"></p>
+              <p id="clientPhoneDisplay" class="text-gray-600"></p>
+            </div>
+          </div>
+
+          <table class="w-full text-left border-collapse">
+            <thead class="invoice-header">
+              <tr
+                class="border-b-2 border-gray-200 text-gray-500 uppercase text-xs tracking-wider"
+              >
+                <th class="py-3 font-medium">Description</th>
+                <th class="py-3 text-center font-medium">Qty</th>
+                <th class="py-3 text-right font-medium">Unit Price</th>
+                <th class="py-3 text-right font-medium">Amount</th>
+              </tr>
+            </thead>
+            <tbody id="itemsBody" class="text-gray-700"></tbody>
+            <tfoot class="invoice-footer">
+              <tr class="border-t-2 border-gray-200">
+                <td
+                  colspan="3"
+                  class="py-4 text-right font-medium text-gray-800"
+                >
+                  Total
+                </td>
+                <td
+                  class="py-4 text-right font-bold text-xl text-indigo-600"
+                  id="totalAmount"
+                >
+                  LKR 0.00
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+
+          <div class="mt-16 text-gray-500 text-sm">
+            <p>Thank you for your business.</p>
+            <p class="mt-2">Payment due within 30 days.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const items = [];
+      const productSelect = document.getElementById("productSelect");
+      const logoInput = document.getElementById("logoInput");
+      const invoiceLogo = document.getElementById("invoiceLogo");
+      const invoiceDateEl = document.getElementById("invoiceDate");
+      const invoiceNoEl = document.getElementById("invoiceNo");
+      const invoiceNoDisplay = document.getElementById("invoiceNoDisplay");
+      const itemsBody = document.getElementById("itemsBody");
+      const totalAmount = document.getElementById("totalAmount");
+      const fromName = document.getElementById("fromName");
+      const fromAddress = document.getElementById("fromAddress");
+      const fromEmail = document.getElementById("fromEmail");
+      const fromPhone = document.getElementById("fromPhone");
+      const clientNameDisplay = document.getElementById("clientNameDisplay");
+      const clientAddressDisplay = document.getElementById(
+        "clientAddressDisplay"
+      );
+      const clientEmailDisplay = document.getElementById("clientEmailDisplay");
+      const clientPhoneDisplay = document.getElementById("clientPhoneDisplay");
+
+      let currentInvoiceNo = "INV-001";
+
+      // Load company details from local storage
+      function loadCompanyDetails() {
+        const details =
+          JSON.parse(localStorage.getItem("companyDetails")) || {};
+        document.getElementById("companyName").value = details.name || "";
+        document.getElementById("companyAddress").value = details.address || "";
+        document.getElementById("companyEmail").value = details.email || "";
+        document.getElementById("companyPhone").value = details.phone || "";
+        updateFromDetails(details);
+      }
+
+      function updateFromDetails(details) {
+        fromName.textContent = details.name || "Your Company";
+        fromAddress.textContent = details.address || "123 Street, City, State";
+        fromEmail.textContent = details.email || "";
+        fromPhone.textContent = details.phone || "";
+      }
+
+      // Save company details
+      document
+        .getElementById("saveCompanyBtn")
+        .addEventListener("click", () => {
+          const name = document.getElementById("companyName").value.trim();
+          if (!name) {
+            alert("Company name is required.");
+            return;
+          }
+          const details = {
+            name,
+            address: document.getElementById("companyAddress").value,
+            email: document.getElementById("companyEmail").value,
+            phone: document.getElementById("companyPhone").value,
+          };
+          localStorage.setItem("companyDetails", JSON.stringify(details));
+          updateFromDetails(details);
+        });
+
+      // Update client details (per invoice, no storage)
+      document.getElementById("saveClientBtn").addEventListener("click", () => {
+        const name = document.getElementById("clientName").value.trim();
+        if (!name) {
+          alert("Client name is required.");
+          return;
+        }
+        clientNameDisplay.textContent = name || "Client Name";
+        clientAddressDisplay.textContent =
+          document.getElementById("clientAddress").value ||
+          "456 Avenue, City, State";
+        clientEmailDisplay.textContent =
+          document.getElementById("clientEmail").value || "";
+        clientPhoneDisplay.textContent =
+          document.getElementById("clientPhone").value || "";
+      });
+
+      // Hide/Show Invoice No
+      document
+        .getElementById("hideInvoiceNo")
+        .addEventListener("change", (e) => {
+          invoiceNoDisplay.style.display = e.target.checked ? "none" : "block";
+        });
+
+      // Manual Invoice No
+      document
+        .getElementById("invoiceNoInput")
+        .addEventListener("input", (e) => {
+          currentInvoiceNo = e.target.value.trim();
+          if (!currentInvoiceNo) {
+            alert("Invoice number cannot be empty.");
+            currentInvoiceNo = "INV-001";
+            document.getElementById("invoiceNoInput").value = currentInvoiceNo;
+          }
+          invoiceNoEl.textContent = currentInvoiceNo;
+        });
+
+      // Date Picker
+      document
+        .getElementById("invoiceDateInput")
+        .addEventListener("change", (e) => {
+          if (!e.target.value) {
+            alert("Please select a date.");
+            e.target.value = new Date().toISOString().split("T")[0];
+          }
+          invoiceDateEl.textContent = new Date(
+            e.target.value
+          ).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          });
+        });
+
+      // Set initial date
+      const today = new Date().toISOString().split("T")[0];
+      document.getElementById("invoiceDateInput").value = today;
+      invoiceDateEl.textContent = new Date().toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+
+      // Logo
+      logoInput.addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          const url = URL.createObjectURL(file);
+          invoiceLogo.src = url;
+          invoiceLogo.style.display = "block";
+        }
+      });
+
+      // CSV
+      document.getElementById("csvInput").addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function (ev) {
+          const text = ev.target.result;
+          const rows = text
+            .split("\n")
+            .map((r) => r.trim())
+            .filter((r) => r);
+          const headers = rows[0]
+            .split(",")
+            .map((h) => h.trim().toLowerCase().replace(/['"]+/g, ""));
+          const nameIdx = headers.findIndex(
+            (h) => h.includes("product") && h.includes("name")
+          );
+          if (nameIdx === -1) {
+            alert('CSV must contain "Product Name" column');
+            return;
+          }
+          productSelect.innerHTML =
+            '<option value="">Select product...</option>';
+          for (let i = 1; i < rows.length; i++) {
+            const cols = rows[i]
+              .split(",")
+              .map((c) => c.trim().replace(/['"]+/g, ""));
+            if (cols[nameIdx]) {
+              const opt = document.createElement("option");
+              opt.value = cols[nameIdx];
+              opt.textContent = cols[nameIdx];
+              productSelect.appendChild(opt);
+            }
+          }
+        };
+        reader.readAsText(file);
+      });
+
+      // Add item
+      document.getElementById("addBtn").addEventListener("click", addItem);
+
+      function addItem() {
+        const name = productSelect.value.trim();
+        const qty = parseInt(document.getElementById("qty").value);
+        const price = parseFloat(document.getElementById("price").value);
+        if (!name || isNaN(qty) || qty <= 0 || isNaN(price) || price < 0) {
+          alert(
+            "Please select a product and enter valid positive quantity & price."
+          );
+          return;
+        }
+        const amount = qty * price;
+        items.push({ name, qty, price, amount });
+        renderItems();
+        productSelect.value = "";
+        document.getElementById("qty").value = "1";
+        document.getElementById("price").value = "";
+      }
+
+      // Render items with pagination (max 20 rows/page, avoid unnecessary breaks)
+      function renderItems() {
+        itemsBody.innerHTML = "";
+        const maxRowsPerPage = 20;
+        let rowCount = 0;
+
+        items.forEach((item, index) => {
+          if (rowCount === maxRowsPerPage && index < items.length - 1) {
+            // Only break if more items and exactly at limit
+            const breakRow = document.createElement("tr");
+            breakRow.className = "page-break";
+            breakRow.innerHTML = '<td colspan="4"></td>';
+            itemsBody.appendChild(breakRow);
+            rowCount = 0;
+          }
+
+          const row = document.createElement("tr");
+          row.className = "border-b border-gray-100";
+          row.innerHTML = `
+          <td class="py-3 text-gray-700">${item.name}</td>
+          <td class="py-3 text-center text-gray-700">${item.qty}</td>
+          <td class="py-3 text-right text-gray-700">LKR ${item.price.toFixed(
+            2
+          )}</td>
+          <td class="py-3 text-right font-medium text-gray-800">LKR ${item.amount.toFixed(
+            2
+          )}</td>
+        `;
+          itemsBody.appendChild(row);
+          rowCount++;
+        });
+
+        const total = items.reduce((sum, item) => sum + item.amount, 0);
+        totalAmount.textContent = `LKR ${total.toFixed(2)}`;
+      }
+
+      // Generate PDF with filename suggestion
+      document
+        .getElementById("generatePdfBtn")
+        .addEventListener("click", () => {
+          if (items.length === 0) {
+            alert("Please add at least one product.");
+            return;
+          }
+          if (
+            !fromName.textContent ||
+            fromName.textContent === "Your Company"
+          ) {
+            alert("Please save company details.");
+            return;
+          }
+          if (
+            !clientNameDisplay.textContent ||
+            clientNameDisplay.textContent === "Client Name"
+          ) {
+            alert("Please update client details.");
+            return;
+          }
+          const dateStr = invoiceDateEl.textContent
+            .replace(/, /g, "")
+            .replace(/ /g, "_");
+          document.title = `Invoice_${currentInvoiceNo}_${dateStr}.pdf`;
+          window.print();
+          document.title = "Professional Invoice Generator"; // Reset title
+        });
+
+      // New Invoice
+      document.getElementById("newInvoiceBtn").addEventListener("click", () => {
+        items.length = 0;
+        renderItems();
+        // Increment invoice no
+        const match = currentInvoiceNo.match(/(\D*)(\d+)$/);
+        if (match) {
+          const prefix = match[1] || "INV-";
+          const num = parseInt(match[2]) + 1;
+          currentInvoiceNo = `${prefix}${String(num).padStart(3, "0")}`;
+        } else {
+          currentInvoiceNo = "INV-001";
+        }
+        document.getElementById("invoiceNoInput").value = currentInvoiceNo;
+        invoiceNoEl.textContent = currentInvoiceNo;
+        // Reset client details
+        document.getElementById("clientName").value = "";
+        document.getElementById("clientAddress").value = "";
+        document.getElementById("clientEmail").value = "";
+        document.getElementById("clientPhone").value = "";
+        clientNameDisplay.textContent = "Client Name";
+        clientAddressDisplay.textContent = "456 Avenue, City, State";
+        clientEmailDisplay.textContent = "";
+        clientPhoneDisplay.textContent = "";
+        productSelect.value = "";
+        document.getElementById("qty").value = "1";
+        document.getElementById("price").value = "";
+      });
+
+      // Initial load
+      loadCompanyDetails();
+      document.getElementById("invoiceNoInput").value = currentInvoiceNo;
+      invoiceNoEl.textContent = currentInvoiceNo;
+
+      // Enter key for add
+      document.getElementById("price").addEventListener("keypress", (e) => {
+        if (e.key === "Enter") addItem();
+      });
+    </script>
+  </body>
+</html>
