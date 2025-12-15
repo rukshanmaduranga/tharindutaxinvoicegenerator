@@ -158,6 +158,12 @@
             >
               Update Client
             </button>
+            <button
+              id="loadClient"
+              class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition text-sm"
+            >
+              Load Client
+            </button>
           </div>
         </div>
 
@@ -719,7 +725,6 @@
 
       // Initial load
       loadCompanyDetails();
-      loadClientDetails();
 
       const lastCsv = localStorage.getItem("lastCsvName");
       if (lastCsv) {
@@ -758,6 +763,12 @@
         items.splice(index, 1);
         renderItems();
       }
+
+      let loadInvoiceBtn = document.getElementById("loadClient");
+
+      loadInvoiceBtn.addEventListener("click", () => {
+        loadClientDetails();
+      });
     </script>
   </body>
 </html>
