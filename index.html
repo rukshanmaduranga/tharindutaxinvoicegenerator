@@ -19,25 +19,60 @@
           margin: 0;
           padding: 0;
         }
+
         .no-print {
           display: none !important;
         }
+
         #invoice {
           box-shadow: none !important;
           margin: 0;
           width: 100%;
         }
+
+        /* Allow table to split across pages */
+        table {
+          width: 100%;
+          border-collapse: collapse;
+        }
+
+        thead {
+          display: table-header-group;
+        }
+
+        /* DO NOT repeat footer */
+        tfoot {
+          display: table-row-group;
+        }
+
+        tr {
+          page-break-inside: avoid;
+        }
+
         .page-break {
           page-break-before: always;
         }
-        .invoice-header {
-          display: table-header-group;
+      }
+      @media print {
+        input,
+        select,
+        textarea,
+        button {
+          display: none !important;
         }
-        table {
-          break-inside: avoid;
+
+        .print-text {
+          display: inline !important;
         }
-        tfoot {
-          display: table-footer-group;
+
+        .no-print {
+          display: none !important;
+        }
+      }
+
+      @media screen {
+        .print-text {
+          display: none;
         }
       }
     </style>
@@ -292,6 +327,7 @@
                 <th class="py-3 text-center font-medium">Qty</th>
                 <th class="py-3 text-right font-medium">Unit Price</th>
                 <th class="py-3 text-right font-medium">Amount</th>
+                <th class="py-3 text-right font-medium no-print">Action</th>
               </tr>
             </thead>
             <tbody id="itemsBody" class="text-gray-700"></tbody>
@@ -355,6 +391,28 @@
         updateFromDetails(details);
       }
 
+      // Save client details
+      function saveClientDetails(details) {
+        localStorage.setItem("clientDetails", JSON.stringify(details));
+      }
+
+      // Load client details
+      function loadClientDetails() {
+        const details = JSON.parse(localStorage.getItem("clientDetails")) || {};
+
+        document.getElementById("clientName").value = details.name || "";
+        document.getElementById("clientAddress").value = details.address || "";
+        document.getElementById("clientEmail").value = details.email || "";
+        document.getElementById("clientPhone").value = details.phone || "";
+
+        if (details.name) {
+          clientNameDisplay.textContent = details.name;
+          clientAddressDisplay.textContent = details.address || "";
+          clientEmailDisplay.textContent = details.email || "";
+          clientPhoneDisplay.textContent = details.phone || "";
+        }
+      }
+
       function updateFromDetails(details) {
         fromName.textContent = details.name || "Your Company";
         fromAddress.textContent = details.address || "123 Street, City, State";
@@ -388,14 +446,20 @@
           alert("Client name is required.");
           return;
         }
-        clientNameDisplay.textContent = name || "Client Name";
-        clientAddressDisplay.textContent =
-          document.getElementById("clientAddress").value ||
-          "456 Avenue, City, State";
-        clientEmailDisplay.textContent =
-          document.getElementById("clientEmail").value || "";
-        clientPhoneDisplay.textContent =
-          document.getElementById("clientPhone").value || "";
+
+        const details = {
+          name,
+          address: document.getElementById("clientAddress").value,
+          email: document.getElementById("clientEmail").value,
+          phone: document.getElementById("clientPhone").value,
+        };
+
+        saveClientDetails(details);
+
+        clientNameDisplay.textContent = details.name;
+        clientAddressDisplay.textContent = details.address;
+        clientEmailDisplay.textContent = details.email;
+        clientPhoneDisplay.textContent = details.phone;
       });
 
       // Hide/Show Invoice No
@@ -458,6 +522,7 @@
       document.getElementById("csvInput").addEventListener("change", (e) => {
         const file = e.target.files[0];
         if (!file) return;
+        localStorage.setItem("lastCsvName", file.name);
         const reader = new FileReader();
         reader.onload = function (ev) {
           const text = ev.target.result;
@@ -499,15 +564,33 @@
         const name = productSelect.value.trim();
         const qty = parseInt(document.getElementById("qty").value);
         const price = parseFloat(document.getElementById("price").value);
+
         if (!name || isNaN(qty) || qty <= 0 || isNaN(price) || price < 0) {
+          alert("Please select a product and enter valid quantity & price.");
+          return;
+        }
+
+        // Check if product already exists
+        // Prevent duplicate products
+        const existingIndex = items.findIndex((i) => i.name === name);
+
+        if (existingIndex !== -1) {
           alert(
-            "Please select a product and enter valid positive quantity & price."
+            "This product is already added. Please update quantity in the table."
           );
           return;
         }
-        const amount = qty * price;
-        items.push({ name, qty, price, amount });
+
+        items.push({
+          name,
+          qty,
+          price,
+          amount: qty * price,
+        });
+
         renderItems();
+
+        // Reset inputs
         productSelect.value = "";
         document.getElementById("qty").value = "1";
         document.getElementById("price").value = "";
@@ -516,33 +599,59 @@
       // Render items with pagination (max 20 rows/page, avoid unnecessary breaks)
       function renderItems() {
         itemsBody.innerHTML = "";
-        const maxRowsPerPage = 20;
-        let rowCount = 0;
 
         items.forEach((item, index) => {
-          if (rowCount === maxRowsPerPage && index < items.length - 1) {
-            // Only break if more items and exactly at limit
-            const breakRow = document.createElement("tr");
-            breakRow.className = "page-break";
-            breakRow.innerHTML = '<td colspan="4"></td>';
-            itemsBody.appendChild(breakRow);
-            rowCount = 0;
-          }
-
           const row = document.createElement("tr");
           row.className = "border-b border-gray-100";
+
           row.innerHTML = `
-          <td class="py-3 text-gray-700">${item.name}</td>
-          <td class="py-3 text-center text-gray-700">${item.qty}</td>
-          <td class="py-3 text-right text-gray-700">LKR ${item.price.toFixed(
-            2
-          )}</td>
-          <td class="py-3 text-right font-medium text-gray-800">LKR ${item.amount.toFixed(
-            2
-          )}</td>
-        `;
+      <td class="py-3 text-gray-700">${item.name}</td>
+
+   <td class="py-3 text-center">
+  <!-- Screen -->
+  <input
+    type="number"
+    min="1"
+    value="${item.qty}"
+    class="w-16 text-center border rounded text-sm p-1 no-print"
+    onchange="updateQty(${index}, this.value)"
+  />
+
+  <!-- Print -->
+  <span class="print-text">${item.qty}</span>
+</td>
+
+<td class="py-3 text-right">
+  <!-- Screen -->
+  <input
+    type="number"
+    step="0.01"
+    min="0"
+    value="${item.price}"
+    class="w-24 text-right border rounded text-sm p-1 no-print"
+    onchange="updatePrice(${index}, this.value)"
+  />
+
+  <!-- Print -->
+  <span class="print-text">LKR ${item.price.toFixed(2)}</span>
+</td>
+
+
+      <td class="py-3 text-right font-medium text-gray-800">
+        LKR ${item.amount.toFixed(2)}
+      </td>
+
+      <td class="py-3 text-right no-print">
+        <button
+          onclick="deleteItem(${index})"
+          class="text-red-600 hover:text-red-800 text-sm"
+        >
+          Remove
+        </button>
+      </td>
+    `;
+
           itemsBody.appendChild(row);
-          rowCount++;
         });
 
         const total = items.reduce((sum, item) => sum + item.amount, 0);
@@ -610,6 +719,12 @@
 
       // Initial load
       loadCompanyDetails();
+
+      const lastCsv = localStorage.getItem("lastCsvName");
+      if (lastCsv) {
+        console.log("Last loaded CSV:", lastCsv);
+      }
+
       document.getElementById("invoiceNoInput").value = currentInvoiceNo;
       invoiceNoEl.textContent = currentInvoiceNo;
 
@@ -617,6 +732,31 @@
       document.getElementById("price").addEventListener("keypress", (e) => {
         if (e.key === "Enter") addItem();
       });
+
+      function updateQty(index, value) {
+        const qty = parseInt(value);
+        if (isNaN(qty) || qty <= 0) return;
+
+        items[index].qty = qty;
+        items[index].amount = items[index].qty * items[index].price;
+        renderItems();
+      }
+
+      function updatePrice(index, value) {
+        const price = parseFloat(value);
+        if (isNaN(price) || price < 0) return;
+
+        items[index].price = price;
+        items[index].amount = items[index].qty * items[index].price;
+        renderItems();
+      }
+
+      function deleteItem(index) {
+        if (!confirm("Remove this product from invoice?")) return;
+
+        items.splice(index, 1);
+        renderItems();
+      }
     </script>
   </body>
 </html>
